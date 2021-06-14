@@ -1,4 +1,4 @@
-package com.example.crawler.service
+package com.example.crawler.service.scraper
 
 import com.example.crawler.model.entity.Proxy
 import com.example.crawler.repository.ProxyRepository
@@ -19,19 +19,18 @@ import mu.KotlinLogging
 @EnableScheduling
 class ProxyScraper(@Autowired val proxyRepository: ProxyRepository) {
 
-    private val baseUrl = "http://www.freeproxylists.net/?a[]=1&a[]=2&s=u"
+    private val baseUrlFreeProxyListsNet = "http://www.freeproxylists.net/?a[]=1&a[]=2&s=u"
     private val logger = KotlinLogging.logger {}
 
 
 
-    @Scheduled(fixedDelay = 1000 * 60 * 60)
-    fun teste() {
-        proxyRepository.deleteAll()
+//    @Scheduled(fixedDelay = 1000 * 60 * 60)
+    fun scrapeFreeProxyListsNet() {
         val driver = ChromeDriver()
-        driver.get(baseUrl)
+        driver.get(baseUrlFreeProxyListsNet)
         var pages = driver.findElementsByClassName("page").first().findElements(By.tagName("a")).count() - 1
         for (i in 1..pages) {
-            driver.get("$baseUrl&page=$i")
+            driver.get("$baseUrlFreeProxyListsNet&page=$i")
             val tables = driver.findElementsByTagName("tbody")
             val selectedTable = tables.stream().skip(tables.stream().count() - 1).findFirst().get()
             val data = selectedTable.findElements(By.tagName("tr")).stream().skip(1).collect(Collectors.toList())
@@ -39,7 +38,7 @@ class ProxyScraper(@Autowired val proxyRepository: ProxyRepository) {
                 try {
                     val host = row.findElement(By.cssSelector("td > a"))?.text
                     val port = row.findElement(By.cssSelector("td:nth-child(2)"))?.text
-                    val source = baseUrl.split("?").first()
+                    val source = baseUrlFreeProxyListsNet.split("?").first()
                     proxyRepository.save(
                         Proxy(
                             UUID.randomUUID().toString(),

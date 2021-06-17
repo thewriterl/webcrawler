@@ -19,18 +19,20 @@ import mu.KotlinLogging
 @EnableScheduling
 class ProxyScraper(@Autowired val proxyRepository: ProxyRepository) {
 
-    private val baseUrlFreeProxyListsNet = "http://www.freeproxylists.net/?a[]=1&a[]=2&s=u"
+//    private val baseUrlFreeProxyListsNet = "http://www.freeproxylists.net/?a[]=1&a[]=2&s=u"
+    private val baseUrlFreeProxyListsNet = "http://www.freeproxylists.net/"
     private val logger = KotlinLogging.logger {}
 
 
 
 //    @Scheduled(fixedDelay = 1000 * 60 * 60)
     fun scrapeFreeProxyListsNet() {
+//        proxyRepository.deleteAll()
         val driver = ChromeDriver()
         driver.get(baseUrlFreeProxyListsNet)
         var pages = driver.findElementsByClassName("page").first().findElements(By.tagName("a")).count() - 1
         for (i in 1..pages) {
-            driver.get("$baseUrlFreeProxyListsNet&page=$i")
+            driver.get("$baseUrlFreeProxyListsNet?page=$i")
             val tables = driver.findElementsByTagName("tbody")
             val selectedTable = tables.stream().skip(tables.stream().count() - 1).findFirst().get()
             val data = selectedTable.findElements(By.tagName("tr")).stream().skip(1).collect(Collectors.toList())
